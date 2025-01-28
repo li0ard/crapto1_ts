@@ -1,0 +1,31 @@
+{
+  "name": "@li0ard/crapto1_ts",
+  "version": "0.1.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "author": "li0ard",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/li0ard/crapto1_ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/li0ard/crapto1_ts/issues"
+  },
+  "homepage": "https://github.com/li0ard/crapto1_ts#readme",
+  "description": "Crapto1 TypeScript implement",
+  "license": "MIT",
+  "scripts": {
+    "build": "rm -rf dist/ && tsc --project tsconfig.build.json"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  }
+}
