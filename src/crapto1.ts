@@ -13,7 +13,7 @@ export class Crapto1 {
     rresp2: number = 0;
     key: bigint = -1n;
 
-    static CraptoData = class{
+    static CraptoData = class {
         uid: number = 0;
         chal: number[] = [];
         rchal: number[] = [];
@@ -256,7 +256,7 @@ export class Crapto1 {
         return ret;
     }
 
-    crypto1_get_lfsr(state: Crypto1State[], t: number, lfsr: bigint) {
+    crypto1_get_lfsr(state: Crypto1State[], t: number, lfsr: bigint): bigint {
         let i: number;
         for (lfsr = 0n, i = 23; i >= 0; --i) {
             lfsr = lfsr << 1n | BigInt(this.bit(state[t].odd, i ^ 3));
