@@ -1,1 +1,1 @@
-export { recovery32 } from "./crapto1"
+export { recovery32, prng_successor } from "./crapto1"
