@@ -1,6 +1,20 @@
-# crapto1_ts
-
-Crapto1 C# implement. Recovery keys for MIFARE Classic in TypeScript!
+<p align="center">
+    <a href="https://github.com/li0ard/crapto1_ts/">
+        <img src="https://habrastorage.org/webt/oa/wp/he/oawpheo7_bxovldfonmolqcgij4.png" alt="crapto1_ts logo" title="crapto1_ts" width="120" /><br>
+    </a><br>
+    <b>crapto1_ts</b><br>
+    <b>Recovery keys for MIFARE Classic</b>
+    <br>
+    <a href="https://li0ard.is-cool.dev/crapto1_ts">docs</a>
+    <br><br>
+    <a href="https://github.com/li0ard/crapto1_ts/actions/workflows/test.yml"><img src="https://github.com/li0ard/crapto1_ts/actions/workflows/test.yml/badge.svg" /></a>
+    <a href="https://github.com/li0ard/crapto1_ts/blob/main/LICENSE"><img src="https://img.shields.io/github/license/li0ard/crapto1_ts" /></a>
+    <br>
+    <a href="https://npmjs.com/package/@li0ard/crapto1_ts"><img src="https://img.shields.io/npm/v/@li0ard/crapto1_ts" /></a>
+    <a href="https://jsr.io/@li0ard/crapto1-ts"><img src="https://jsr.io/badges/@li0ard/crapto1-ts" /></a>
+    <br>
+    <hr>
+</p>
 
 ## Installation
 
@@ -28,3 +42,7 @@ console.log(recovery32(
     readerResponse2
 ).toString(16))
 ```
+
+## Links
+- [crapto1](https://github.com/li0ard/crapto1) - Original version in C
+- [Crapto1Sharp](https://github.com/kgamecarter/Crapto1Sharp) - Version in C#
