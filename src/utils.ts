@@ -137,3 +137,14 @@ export const evenParity32 = (x: number): number => {
     x ^= x >> 8;
     return evenParity8(x & 0xFF);
 }
+
+/**
+ * Swaps endianness of given number
+ * @param x Number to swap
+ * @returns {number}
+ */
+export const swapendian = (x: number): number => {
+    x = (x >>> 8 & 0xff00ff) | (x & 0xff00ff) << 8;
+    x = x >>> 16 | x << 16;
+    return x;
+}

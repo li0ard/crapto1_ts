@@ -1,6 +1,6 @@
 {
   "name": "@li0ard/crapto1_ts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -16,10 +16,12 @@
   "description": "Crapto1 TypeScript implement",
   "license": "MIT",
   "scripts": {
-    "build": "rm -rf dist/ && tsc --project tsconfig.build.json"
+    "build": "rm -rf dist/ && tsc --project tsconfig.build.json",
+    "docs": "typedoc --options .config/typedoc/config.cjs"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typedoc": "^0.27.6"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
