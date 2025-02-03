@@ -105,6 +105,21 @@ export const extend_table_simple = (tbl: number[], end: number, bit: number): nu
     return end;
 }
 
+export const extend_table_simpleRef = (tbl: number[], end: { value: number }, bit: number): number => {
+    let i = 0;
+    for (tbl[i] <<= 1; i <= end.value; tbl[++i] <<= 1) {
+        if ((filter(tbl[i]) ^ filter(tbl[i] | 1)) !== 0) {
+            tbl[i] |= filter(tbl[i]) ^ bit;
+        } else if (filter(tbl[i]) === bit) {
+            tbl[++end.value] = tbl[++i];
+            tbl[i] = tbl[i - 1] | 1;
+        } else {
+            tbl[i--] = tbl[end.value--];
+        }
+    }
+    return end.value;
+}
+
 export const oddByteParity: number[] = [
     1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
     0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0,

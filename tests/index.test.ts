@@ -1,31 +1,49 @@
-import { expect, test, it } from "bun:test"
-import { Crypto1State, recovery32 } from "../src/"
+import { expect, test } from "bun:test"
+import { Crypto1State, recovery32, recovery64 } from "../src/"
 import { filter } from "../src/utils"
 
 test("Recovery by 2 auths", () => {
-    it("Real card", () => {
-        expect(recovery32(
-            0x23A12659,
-            0x182c6685,
-            0x3893952A,
-            0x9613a859,
-            0xb3aac455,
-            0xf05e18ac,
-            0x2c479869
-        )).toBe(0xe23ecc65d921n)
-    })
+    // Real card
+    expect(recovery32(
+        0x23A12659,
+        0x182c6685,
+        0x3893952A,
+        0x9613a859,
+        0xb3aac455,
+        0xf05e18ac,
+        0x2c479869
+    )).toBe(0xe23ecc65d921n)
     
-    it("proxmark3 sample", () => {
-        expect(recovery32(
-            0x939be0d5,
-            0x4e70d691,
-            0xb3a576be,
-            0x02c1559b,
-            0xc6efb126,
-            0xd24dd966,
-            0x03fc7386
-        )).toBe(0xa0a1a2a3a4a5n)
-    })
+    // proxmark3 sample
+    expect(recovery32(
+        0x939be0d5,
+        0x4e70d691,
+        0xb3a576be,
+        0x02c1559b,
+        0xc6efb126,
+        0xd24dd966,
+        0x03fc7386
+    )).toBe(0xa0a1a2a3a4a5n)
+})
+
+test("Recovery by 1 auth", () => {
+    // proxmark3 sample
+    expect(recovery64(
+        0x14579f69,
+        0xce844261,
+        0xf8049ccb,
+        0x0525c84f,
+        0x9431cc40
+    )).toBe(0x091e639cb715n)
+
+    // crapto1gui sample
+    expect(recovery64(
+        0xc108416a,
+        0xabcd1949,
+        0x59d5920f,
+        0x15b9d553,
+        0xa79a3fee
+    )).toBe(0x62bea192fa37n)
 })
 
 test("State", () => {

@@ -43,6 +43,19 @@ console.log(recovery32(
 ).toString(16))
 ```
 
+### Recovery by 1 set of full 64 bit auth
+```ts
+import { recovery64 } from "@li0ard/crapto1_ts" // or @li0ard/crapto1-ts
+
+console.log(recovery64(
+    uid,
+    tagChallenge,
+    readerChallenge,
+    readerResponse,
+    tagResponse
+).toString(16))
+```
+
 ## Links
 - [crapto1](https://github.com/li0ard/crapto1) - Original version in C
 - [Crapto1Sharp](https://github.com/kgamecarter/Crapto1Sharp) - Version in C#

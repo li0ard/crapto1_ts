@@ -1,7 +1,7 @@
 import { prng_successor } from "./crypto1";
 import { LF_POLY_EVEN, LF_POLY_ODD, crypto1_word } from "./crypto1";
 import { Crypto1State } from "./state";
-import { bebit, binsearch, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
+import { bebit, binsearch, evenParity32, extend_table, extend_table_simple, extend_table_simpleRef, filter, parity, quicksort } from "./utils";
 
 /**
  * Rollback the shift register in order to get previous states (for bits)
@@ -21,7 +21,7 @@ export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boo
     out ^= LF_POLY_EVEN & (s.even >>= 1);
     out ^= LF_POLY_ODD & s.odd;
     out ^= (in_ !== 0) ? 1 : 0;
-    out ^= (ret = filter(s.odd)) & ((isEncrypted) ? 1 : 0);
+    out ^= (ret = s.peekCrypto1Bit) & ((isEncrypted) ? 1 : 0);
     s.even |= parity(out) << 23;
     return ret;
 }
@@ -82,7 +82,7 @@ const recover = (odd: number[], o_head: number, o_tail: number, oks: number, eve
 
 /**
  * Recovery possible states from keystream from two's partial auth's
- * @param ks2 Keystream (32 -> 64)
+ * @param ks2 Keystream (32 -> 63)
  * @param in_ Input
  * @returns {Crypto1State[]}
  */
@@ -122,7 +122,13 @@ export const lfsr_recovery32 = (ks2: number, in_: number): Crypto1State[] => {
     return statelist;
 }
 
-const lfsr_recovery64 = (ks2: number, ks3: number) => {
+/**
+ * Recovery possible states from keystreams from one full auth
+ * @param ks2 Keystream (32 -> 63)
+ * @param ks3 Keystream (64 -> 95)
+ * @returns {Crypto1State[]}
+ */
+export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
     const S1: Readonly<number[]> = [0x62141, 0x310A0, 0x18850, 0x0C428, 0x06214, 0x0310A,
         0x85E30, 0xC69AD, 0x634D6, 0xB5CDE, 0xDE8DA, 0x6F46D,
         0xB3C83, 0x59E41, 0xA8995,  0xD027F, 0x6813F, 0x3409F, 0x9E6FA]
@@ -146,6 +152,84 @@ const lfsr_recovery64 = (ks2: number, ks3: number) => {
     
     const C1: Readonly<number[]> = [0x846B5, 0x4235A, 0x211AD]
     const C2: Readonly<number[]> = [0x1A822E0, 0x21A822E0, 0x21A822E0]
+
+    let oks: number[] = Array(32).fill(0);
+    let eks: number[] = Array(32).fill(0);
+    let hi: number[] = Array(32).fill(0);
+    let win = 0;
+    let low = 0
+    let table: number[] = Array(1 << 16).fill(0)
+    let statelist: Crypto1State[] = []
+
+    for (let i = 30; i >= 0; i -= 2) {
+        oks[i >> 1] = bebit(ks2, i);
+        oks[16 + (i >> 1)] = bebit(ks3, i);
+    }
+
+    for (let i = 31; i >= 0; i -= 2) {
+        eks[i >> 1] = bebit(ks2, i);
+        eks[16 + (i >> 1)] = bebit(ks3, i);
+    }
+    
+    for (let i = 0xfffff; i >= 0; i--) {
+        if (filter(i) != oks[0]) continue;
+
+        let tail = { value: 0 };
+        table[tail.value] = i;
+
+        for (let j = 1; tail.value >= 0 && j < 29; j++) {
+            extend_table_simpleRef(table, tail, oks[j]);
+        }
+        
+        if (tail.value < 0) continue;
+
+        for (let j = 0; j < 19; ++j) {
+            low = low << 1 | evenParity32(i & S1[j]);
+        }
+        
+
+        for (let j = 0; j < 32; ++j) {
+            hi[j] = evenParity32(i & T1[j]);
+        }
+        
+        for (; tail.value >= 0; --tail.value) {
+            let needContinue = false
+            for (let j = 0; j < 3; j++) {
+                table[tail.value] = table[tail.value] << 1;
+                table[tail.value] |= evenParity32((i & C1[j]) ^ (table[tail.value] & C2[j]));
+
+                if(filter(table[tail.value]) != oks[29 + j]) {
+                    needContinue = true
+                    break
+                }
+            }
+
+            if (needContinue) continue;
+
+            for (let j = 0; j < 19; j++) {
+                win = win << 1 | evenParity32(table[tail.value] & S2[j]);
+            }
+
+            win ^= low;
+            for (let j = 0; j < 32; ++j) {
+                win = win << 1 ^ hi[j] ^ evenParity32(table[tail.value] & T2[j]);
+                if (filter(win) != eks[j]) {
+                    needContinue = true
+                    break
+                }
+            }
+
+            if (needContinue) continue;
+
+            table[tail.value] = table[tail.value] << 1 | evenParity32(LF_POLY_EVEN & table[tail.value]);
+            statelist.push(new Crypto1State(
+                table[tail.value] ^ evenParity32(LF_POLY_ODD & win),
+                win
+            ))
+        }
+    }
+
+    return statelist;
 }
 
 /**
@@ -175,18 +259,23 @@ export const recovery32 = (uid: number, chal: number, rchal: number, rresp: numb
     return -1n;
 }
 
-const recovery64 = () => {
-    // lfsr_recovery64 doesn't working rn
-    let uid = 0x14579f69
-    let nr = 0xf8049ccb
-    let nt = 0xce844261
-    const s = new Crypto1State()
-    s.odd = 136423820
-    s.even = -1406108812
+/**
+ * Recovery by one set of full 64 bit keystream authentication
+ * @param uid UID
+ * @param chal Tag challenge
+ * @param rchal Reader challenge
+ * @param rresp Reader response
+ * @param tresp Tag response
+ * @returns {bigint}
+ */
+export const recovery64 = (uid: number, chal: number, rchal: number, rresp: number, tresp: number): bigint => {
+    let ks2 = rresp ^ prng_successor(chal, 64);
+    let ks3 = tresp ^ prng_successor(chal, 96);
+    let s = lfsr_recovery64(ks2, ks3)[0]
     lfsr_rollback_word(s, 0)
     lfsr_rollback_word(s, 0)
-    lfsr_rollback_word(s, nr, true)
-    lfsr_rollback_word(s, uid^nt)
+    lfsr_rollback_word(s, rchal, true)
+    lfsr_rollback_word(s, uid^chal)
 
     return s.lfsr
 }

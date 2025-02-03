@@ -1,15 +1,12 @@
 {
     "name": "@li0ard/crapto1-ts",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "exports": "./src/index.ts",
     "publish": {
         "include": [
             "LICENSE",
             "README.md",
             "src/**/*.ts"
-        ],
-        "exclude": [
-            "src/legacy/*.ts"
         ]
     }
 }

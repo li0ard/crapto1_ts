@@ -37,7 +37,7 @@ export class Crypto1State {
         return lfsr;
     }
 
-    /** Get next Crypto1 bit */
+    /** Get filtered state `odd` value */
     get peekCrypto1Bit(): number {
         return filter(this.odd);
     }
