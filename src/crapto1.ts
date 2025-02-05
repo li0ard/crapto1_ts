@@ -1,7 +1,7 @@
 import { prng_successor } from "./crypto1";
 import { LF_POLY_EVEN, LF_POLY_ODD, crypto1_word } from "./crypto1";
 import { Crypto1State } from "./state";
-import { bebit, binsearch, evenParity32, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
+import { bebit, binsearch, bit, evenParity32, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
 
 /**
  * Rollback the shift register in order to get previous states (for bits)
@@ -23,6 +23,21 @@ export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boo
     out ^= (in_ !== 0) ? 1 : 0;
     out ^= (ret = s.peekCrypto1Bit) & ((isEncrypted) ? 1 : 0);
     s.even |= parity(out) << 23;
+    return ret;
+}
+
+/**
+ * Rollback the shift register in order to get previous states (for bytes)
+ * @param s State
+ * @param in_ Word
+ * @param isEncrypted Encrypted?
+ * @returns {number}
+ */
+export const lfsr_rollback_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+    let ret: number = 0;
+    for (let i = 7; i >= 0; --i) {
+        ret |= lfsr_rollback_bit(s, bit(in_, i), isEncrypted) << i;
+    }
     return ret;
 }
 

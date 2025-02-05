@@ -1,5 +1,5 @@
 import type { Crypto1State } from "./state";
-import { bebit, filter, parity, swapendian } from "./utils";
+import { bebit, bit, filter, parity, swapendian } from "./utils";
 
 export const LF_POLY_ODD: number = 0x29CE5C;
 export const LF_POLY_EVEN: number = 0x870804;
@@ -29,6 +29,21 @@ export const crypto1_word = (s: Crypto1State, in_: number, isEncrypted: boolean 
     let i: number, ret: number = 0;
     for (i = 0; i < 32; ++i) {
         ret |= crypto1_bit(s, bebit(in_, i), isEncrypted) << (i ^ 24);
+    }
+    return ret;
+}
+
+/**
+ * Proceed Crypto1 encryption/decryption process (for bytes)
+ * @param s State
+ * @param in_ Word
+ * @param isEncrypted Encrypted?
+ * @returns {number}
+ */
+export const crypto1_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+    let i: number, ret: number = 0;
+    for (i = 0; i < 8; ++i) {
+        ret |= crypto1_bit(s, bit(in_, i), isEncrypted) << i;
     }
     return ret;
 }

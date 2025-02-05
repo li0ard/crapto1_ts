@@ -28,6 +28,9 @@ bunx i jsr install @li0ard/crapto1-ts
 
 ## Usage
 
+> [!TIP]
+> Ported mfkey64 and mfkey32 are placed [here](https://github.com/li0ard/crapto1_ts/tree/main/examples)
+
 ### Recovery by 2 sets of 32 bit auth
 ```ts
 import { recovery32 } from "@li0ard/crapto1_ts" // or @li0ard/crapto1-ts
