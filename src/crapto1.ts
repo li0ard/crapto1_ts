@@ -1,7 +1,7 @@
 import { prng_successor } from "./crypto1";
 import { LF_POLY_EVEN, LF_POLY_ODD, crypto1_word } from "./crypto1";
 import { Crypto1State } from "./state";
-import { bebit, binsearch, evenParity32, extend_table, extend_table_simple, extend_table_simpleRef, filter, parity, quicksort } from "./utils";
+import { bebit, binsearch, evenParity32, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
 
 /**
  * Rollback the shift register in order to get previous states (for bits)
@@ -174,14 +174,14 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
     for (let i = 0xfffff; i >= 0; i--) {
         if (filter(i) != oks[0]) continue;
 
-        let tail = { value: 0 };
-        table[tail.value] = i;
+        let tail = 0;
+        table[tail] = i;
 
-        for (let j = 1; tail.value >= 0 && j < 29; j++) {
-            extend_table_simpleRef(table, tail, oks[j]);
+        for (let j = 1; tail >= 0 && j < 29; j++) {
+            tail = extend_table_simple(table, tail, oks[j]);
         }
         
-        if (tail.value < 0) continue;
+        if (tail < 0) continue;
 
         for (let j = 0; j < 19; ++j) {
             low = low << 1 | evenParity32(i & S1[j]);
@@ -192,13 +192,13 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
             hi[j] = evenParity32(i & T1[j]);
         }
         
-        for (; tail.value >= 0; --tail.value) {
+        for (; tail >= 0; --tail) {
             let needContinue = false
             for (let j = 0; j < 3; j++) {
-                table[tail.value] = table[tail.value] << 1;
-                table[tail.value] |= evenParity32((i & C1[j]) ^ (table[tail.value] & C2[j]));
+                table[tail] = table[tail] << 1;
+                table[tail] |= evenParity32((i & C1[j]) ^ (table[tail] & C2[j]));
 
-                if(filter(table[tail.value]) != oks[29 + j]) {
+                if(filter(table[tail]) != oks[29 + j]) {
                     needContinue = true
                     break
                 }
@@ -207,12 +207,12 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
             if (needContinue) continue;
 
             for (let j = 0; j < 19; j++) {
-                win = win << 1 | evenParity32(table[tail.value] & S2[j]);
+                win = win << 1 | evenParity32(table[tail] & S2[j]);
             }
 
             win ^= low;
             for (let j = 0; j < 32; ++j) {
-                win = win << 1 ^ hi[j] ^ evenParity32(table[tail.value] & T2[j]);
+                win = win << 1 ^ hi[j] ^ evenParity32(table[tail] & T2[j]);
                 if (filter(win) != eks[j]) {
                     needContinue = true
                     break
@@ -221,9 +221,9 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
 
             if (needContinue) continue;
 
-            table[tail.value] = table[tail.value] << 1 | evenParity32(LF_POLY_EVEN & table[tail.value]);
+            table[tail] = table[tail] << 1 | evenParity32(LF_POLY_EVEN & table[tail]);
             statelist.push(new Crypto1State(
-                table[tail.value] ^ evenParity32(LF_POLY_ODD & win),
+                table[tail] ^ evenParity32(LF_POLY_ODD & win),
                 win
             ))
         }
