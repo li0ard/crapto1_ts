@@ -1,6 +1,6 @@
 <p align="center">
     <a href="https://github.com/li0ard/crapto1_ts/">
-        <img src="https://habrastorage.org/webt/oa/wp/he/oawpheo7_bxovldfonmolqcgij4.png" alt="crapto1_ts logo" title="crapto1_ts" width="120" /><br>
+        <img src="https://raw.githubusercontent.com/li0ard/crapto1_ts/main/.github/logo.png" alt="crapto1_ts logo" title="crapto1_ts" width="120" /><br>
     </a><br>
     <b>crapto1_ts</b><br>
     <b>Recovery keys for MIFARE Classic</b>
