@@ -52,7 +52,7 @@ for (let i = 0; i < encc; i++) {
 }
 
 const p64 = prng_successor(chal, 64)
-console.log(`LFSR successors of the tag challenge:
+console.log(`\nLFSR successors of the tag challenge:
   nt': ${dec2hex(p64, 32)}
  nt'': ${dec2hex(prng_successor(p64, 32), 32)}\n`)
 
@@ -72,18 +72,20 @@ if(process.argv.length > 7) {
     for (let i = 0; i < encc; i++) {
         process.stdout.write(`{dec${i}}: `)
         for (let i2 = 0; i2 < enclen[i]; i2++) {
-            ks4 = crypto1_byte(s, 0, false);
+            ks4 = crypto1_byte(s, 0);
             process.stdout.write(dec2hex(ks4 ^ enc[i][i2], 8))
             rollb += 1;
         }
         console.log("")
     }
-    for (let i = 0; i < rollb; i++) lfsr_rollback_byte(s, 0, false)
+    for (let i = 0; i < rollb; i++) lfsr_rollback_byte(s, 0)
 }
+let postAuthState = s.lfsr
 
 lfsr_rollback_word(s, 0)
 lfsr_rollback_word(s, 0)
 lfsr_rollback_word(s, rchal, true)
 lfsr_rollback_word(s, uid^chal)
 
-console.log(`\nFound Key: [${s.lfsr.toString(16).padEnd(12, "0")}]\n`)
+console.log(`\nFound Key: [${s.lfsr.toString(16).padStart(12, "0")}]
+Post-auth state: [${postAuthState.toString(16).padStart(12, "0")}]`)
