@@ -6,8 +6,8 @@ import { bebit, binsearch, bit, evenParity32, extend_table, extend_table_simple,
 /**
  * Rollback the shift register in order to get previous states (for bits)
  * @param s State
- * @param in_ Bits
- * @param isEncrypted Encrypted?
+ * @param in_ Input bit
+ * @param isEncrypted Is input bit encrypted?
  * @returns {number}
  */
 export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
@@ -29,8 +29,8 @@ export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boo
 /**
  * Rollback the shift register in order to get previous states (for bytes)
  * @param s State
- * @param in_ Word
- * @param isEncrypted Encrypted?
+ * @param in_ Input byte
+ * @param isEncrypted Is input byte encrypted?
  * @returns {number}
  */
 export const lfsr_rollback_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
@@ -44,8 +44,8 @@ export const lfsr_rollback_byte = (s: Crypto1State, in_: number, isEncrypted: bo
 /**
  * Rollback the shift register in order to get previous states (for words (uint32))
  * @param s State
- * @param in_ Word
- * @param isEncrypted Encrypted?
+ * @param in_ Input word
+ * @param isEncrypted Is input word encrypted?
  * @returns {number}
  */
 export const lfsr_rollback_word = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {

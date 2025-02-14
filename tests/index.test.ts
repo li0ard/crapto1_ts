@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { Crypto1State, recovery32, recovery64 } from "../src/"
+import { Crypto1State, encrypt, lfsr_rollback_byte, recovery32, recovery64 } from "../src/"
 import { filter } from "../src/utils"
 
 test("Recovery by 2 auths", () => {
@@ -63,4 +63,17 @@ test("State", () => {
         expect(s.lfsr).toBe(i[0] as bigint)
         expect(s.peekCrypto1Bit).toBe(filter(s.odd))
     }
+})
+
+test("Encryption", () => {
+    let s = Crypto1State.fromKey(0x708076d3560en)
+    // Encrypt
+    expect(encrypt(s, [112, 147, 223, 153])).toEqual([48, 20, 167, 254])
+
+    // Rollback state
+    for(let i = 0; i < 4; i++) lfsr_rollback_byte(s, 0);
+    expect(s.lfsr).toBe(0x708076d3560en)
+
+    // Decrypt
+    expect(encrypt(s, [48, 20, 167, 254])).toEqual([112, 147, 223, 153])
 })

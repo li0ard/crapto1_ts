@@ -23,6 +23,9 @@ export const parity = (x: number): number => {
     return bit(0x6996, x & 0xf);
 }
 
+/**
+ * Binary search for the first occurence of stop's MSB in sorted
+ */
 export const binsearch = (data: number[], start: number, stop: number): number => {
     let mid: number, val: number = data[stop] & 0xff000000;
     while (start !== stop) {
@@ -62,6 +65,9 @@ export const quicksort = (data: number[], start: number, stop: number): void => 
     quicksort(data, rit + 1, stop);
 }
 
+/**
+ * Helper, calculates the partial linear feedback contributions and puts in MSB
+ */
 export const update_contribution = (data: number[], item: number, mask1: number, mask2: number): void => {
     let p: number = data[item] >>> 25;
     p = p << 1 | parity(data[item] & mask1);
@@ -69,6 +75,9 @@ export const update_contribution = (data: number[], item: number, mask1: number,
     data[item] = p << 24 | (data[item] & 0xffffff);
 }
 
+/**
+ * Using a bit of the keystream extend the table of possible lfsr states
+ */
 export const extend_table = (data: number[], tbl: number, end: number, bit: number, m1: number, m2: number, in_: number): number => {
     in_ <<= 24;
     for (data[tbl] <<= 1; tbl <= end; data[++tbl] <<= 1) {
@@ -90,6 +99,9 @@ export const extend_table = (data: number[], tbl: number, end: number, bit: numb
     return end;
 }
 
+/**
+ * Using a bit of the keystream extend the table of possible lfsr states
+ */
 export const extend_table_simple = (tbl: number[], end: number, bit: number): number => {
     let i = 0;
     for (tbl[i] <<= 1; i <= end; tbl[++i] <<= 1) {

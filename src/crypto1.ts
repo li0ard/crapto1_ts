@@ -1,5 +1,5 @@
-import type { Crypto1State } from "./state";
-import { bebit, bit, filter, parity, swapendian } from "./utils";
+import { Crypto1State } from "./state";
+import { bebit, bit, filter, oddParity8, parity, swapendian } from "./utils";
 
 export const LF_POLY_ODD: number = 0x29CE5C;
 export const LF_POLY_EVEN: number = 0x870804;
@@ -19,10 +19,10 @@ export const prng_successor = (x: number, n: number): number => {
 }
 
 /**
- * Proceed Crypto1 encryption/decryption process (for words (uint32))
+ * Generate keystream for words (uint32)
  * @param s State
- * @param in_ Word
- * @param isEncrypted Encrypted?
+ * @param in_ Input word
+ * @param isEncrypted Is input word encrypted?
  * @returns {number}
  */
 export const crypto1_word = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
@@ -34,10 +34,10 @@ export const crypto1_word = (s: Crypto1State, in_: number, isEncrypted: boolean 
 }
 
 /**
- * Proceed Crypto1 encryption/decryption process (for bytes)
+ * Generate keystream for bytes
  * @param s State
- * @param in_ Word
- * @param isEncrypted Encrypted?
+ * @param in_ Input byte
+ * @param isEncrypted Is input byte encrypted?
  * @returns {number}
  */
 export const crypto1_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
@@ -49,10 +49,10 @@ export const crypto1_byte = (s: Crypto1State, in_: number, isEncrypted: boolean 
 }
 
 /**
- * Proceed Crypto1 encryption/decryption process (for bits)
+ * Generate keystream for bits
  * @param s State
- * @param in_ Bit
- * @param isEncrypted Encrypted?
+ * @param in_ Input bit
+ * @param isEncrypted Is input bit encrypted?
  * @returns {number}
  */
 export const crypto1_bit = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
@@ -67,4 +67,20 @@ export const crypto1_bit = (s: Crypto1State, in_: number, isEncrypted: boolean =
     s.even ^= s.odd;
     s.odd ^= s.even;
     return ret;
+}
+
+/**
+ * Proceed encryption/decryption process
+ * @param s State
+ * @param data Input data
+ * @param isIn Use input data as input word for keystream generation?
+ * @returns {number[]}
+ */
+export const encrypt = (s: Crypto1State, data: number[], isIn: boolean = false): number[] => {
+    let result: number[] = []
+    for (let i = 0; i < data.length; i++) {
+        result[i] = data[i] ^ crypto1_byte(s, isIn ? data[i] : 0);
+    }
+
+    return result
 }
