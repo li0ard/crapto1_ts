@@ -1,11 +1,28 @@
-export const bit = (x: number, n: number): number => {
-    return ((x >>> n) & 1);
+/**
+ * Get bit from number by index
+ * @param num Number
+ * @param index Index
+ * @returns {number}
+ */
+export const bit = (num: number, index: number): number => {
+    return ((num >>> index) & 1);
 }
 
-export const bebit = (x: number, n: number): number => {
-    return ((x >>> (n ^ 24)) & 1);
+/**
+ * Get bit from Crypto-1 word (uint32) by index
+ * @param num Word
+ * @param index Index
+ * @returns {number}
+ */
+export const bebit = (num: number, index: number): number => {
+    return bit(num, index ^ 24);
 }
 
+/**
+ * Compute one bit of keystream from LFSR bits
+ * @param x LFSR bits
+ * @returns {number}
+ */
 export const filter = (x: number): number => {
     let f: number = 0;
     f |= (0xf22c0 >>> (x & 0xf) & 16) !== 0 ? 16 : 0;
@@ -16,6 +33,11 @@ export const filter = (x: number): number => {
     return bit(0xEC57E80A, f);
 }
 
+/**
+ * Get parity from number
+ * @param x Number 
+ * @returns {number}
+ */
 export const parity = (x: number): number => {
     x ^= x >>> 16;
     x ^= x >>> 8;
