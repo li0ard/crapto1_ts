@@ -1,4 +1,3 @@
-import { de } from "date-fns/locale"
 import { crypto1_word, Crypto1State, oddParity8, prng_successor } from "../src"
 
 const UID  = 0x0DB3FA11
