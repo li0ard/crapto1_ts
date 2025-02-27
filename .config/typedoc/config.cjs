@@ -11,6 +11,7 @@ module.exports = {
     excludeInternal: true,
     exclude: [
         '**/*/node_modules',
+        '**/*/examples',
         '**/*.test.ts',
     ],
     externalPattern: ['**/dist/**'],
