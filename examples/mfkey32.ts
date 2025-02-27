@@ -8,6 +8,7 @@ import { crypto1_word, lfsr_recovery32, lfsr_rollback_word, prng_successor } fro
 
 if (process.argv.length < 9) {
     console.log('Usage: [bun/node] ' + process.argv[1] + ' <uid> <tag challenge> <reader challenge> <reader response> <tag challenge #2> <reader challenge #2> <reader response #2>')
+    console.log('Example: [bun/node] mfkey32.ts 23a12659 182c6685 3893952a 9613a859 b3aac455 f05e18ac 2c479869')
     process.exit(1)
 }
 

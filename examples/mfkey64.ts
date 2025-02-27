@@ -7,6 +7,7 @@ import { crypto1_byte, lfsr_recovery64, lfsr_rollback_byte, lfsr_rollback_word, 
 
 if (process.argv.length < 7) {
     console.log('Usage: [bun/node] ' + process.argv[1] + ' <uid> <tag challenge> <reader challenge> <reader response> <tag response>')
+    console.log('Example: [bun/node] mfkey64.ts 14579f69 ce844261 f8049ccb 0525c84f 9431cc40')
     process.exit(1)
 }
 
