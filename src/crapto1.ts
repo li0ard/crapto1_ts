@@ -6,11 +6,11 @@ import { bebit, binsearch, bit, evenParity32, extend_table, extend_table_simple,
 /**
  * Rollback the shift register in order to get previous states (for bits)
  * @param s State
- * @param in_ Input bit
+ * @param input Input bit
  * @param isEncrypted Is input bit encrypted?
- * @returns {number}
+ * @returns {number} LFSR output bit
  */
-export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const lfsr_rollback_bit = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let ret: number;
     let t: number;
     s.odd &= 0xffffff;
@@ -20,7 +20,7 @@ export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boo
     let out = s.even & 1;
     out ^= LF_POLY_EVEN & (s.even >>= 1);
     out ^= LF_POLY_ODD & s.odd;
-    out ^= (in_ !== 0) ? 1 : 0;
+    out ^= (input !== 0) ? 1 : 0;
     out ^= (ret = s.peekCrypto1Bit) & ((isEncrypted) ? 1 : 0);
     s.even |= parity(out) << 23;
     return ret;
@@ -29,14 +29,14 @@ export const lfsr_rollback_bit = (s: Crypto1State, in_: number, isEncrypted: boo
 /**
  * Rollback the shift register in order to get previous states (for bytes)
  * @param s State
- * @param in_ Input byte
+ * @param input Input byte
  * @param isEncrypted Is input byte encrypted?
- * @returns {number}
+ * @returns {number} LFSR output byte
  */
-export const lfsr_rollback_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const lfsr_rollback_byte = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let ret: number = 0;
     for (let i = 7; i >= 0; --i) {
-        ret |= lfsr_rollback_bit(s, bit(in_, i), isEncrypted) << i;
+        ret |= lfsr_rollback_bit(s, bit(input, i), isEncrypted) << i;
     }
     return ret;
 }
@@ -44,24 +44,24 @@ export const lfsr_rollback_byte = (s: Crypto1State, in_: number, isEncrypted: bo
 /**
  * Rollback the shift register in order to get previous states (for words (uint32))
  * @param s State
- * @param in_ Input word
+ * @param input Input word
  * @param isEncrypted Is input word encrypted?
- * @returns {number}
+ * @returns {number} LFSR output word
  */
-export const lfsr_rollback_word = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const lfsr_rollback_word = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let ret: number = 0;
     for (let i = 31; i >= 0; --i) {
-        ret |= lfsr_rollback_bit(s, bebit(in_, i), isEncrypted) << (i ^ 24);
+        ret |= lfsr_rollback_bit(s, bebit(input, i), isEncrypted) << (i ^ 24);
     }
     return ret;
 }
 
 /** Recursively narrow down the search space, 4 bits of keystream at a time */
-const recover = (odd: number[], o_head: number, o_tail: number, oks: number, even: number[], e_head: number, e_tail: number, eks: number, rem: number, sl: Crypto1State[], s: number, in_: number): number => {
+const recover = (odd: number[], o_head: number, o_tail: number, oks: number, even: number[], e_head: number, e_tail: number, eks: number, rem: number, sl: Crypto1State[], s: number, input: number): number => {
     let o: number, e: number, i: number;
     if (rem === -1) {
         for (e = e_head; e <= e_tail; ++e) {
-            even[e] = even[e] << 1 ^ parity(even[e] & LF_POLY_EVEN) ^ (((in_ & 4) !== 0) ? 1 : 0);
+            even[e] = even[e] << 1 ^ parity(even[e] & LF_POLY_EVEN) ^ (((input & 4) !== 0) ? 1 : 0);
             for (o = o_head; o <= o_tail; ++o, ++s) {
                 sl[s].even = odd[o];
                 sl[s].odd = even[e] ^ parity(odd[o] & LF_POLY_ODD);
@@ -73,10 +73,10 @@ const recover = (odd: number[], o_head: number, o_tail: number, oks: number, eve
     for (i = 0; (i < 4) && (rem-- !== 0); i++) {
         oks >>>= 1;
         eks >>>= 1;
-        in_ >>>= 2;
+        input >>>= 2;
         o_tail = extend_table(odd, o_head, o_tail, oks & 1, LF_POLY_EVEN << 1 | 1, LF_POLY_ODD << 1, 0);
         if (o_head > o_tail) return s;
-        e_tail = extend_table(even, e_head, e_tail, eks & 1, LF_POLY_ODD, LF_POLY_EVEN << 1 | 1, in_ & 3);
+        e_tail = extend_table(even, e_head, e_tail, eks & 1, LF_POLY_ODD, LF_POLY_EVEN << 1 | 1, input & 3);
         if (e_head > e_tail) return s;
     }
     quicksort(odd, o_head, o_tail);
@@ -85,7 +85,7 @@ const recover = (odd: number[], o_head: number, o_tail: number, oks: number, eve
         if (((odd[o_tail] ^ even[e_tail]) >>> 24) === 0) {
             o_tail = binsearch(odd, o_head, o = o_tail);
             e_tail = binsearch(even, e_head, e = e_tail);
-            s = recover(odd, o_tail--, o, oks, even, e_tail--, e, eks, rem, sl, s, in_);
+            s = recover(odd, o_tail--, o, oks, even, e_tail--, e, eks, rem, sl, s, input);
         } else if ((odd[o_tail] ^ 0x80000000) > (even[e_tail] ^ 0x80000000)) {
             o_tail = binsearch(odd, o_head, o_tail) - 1;
         } else {
@@ -98,10 +98,10 @@ const recover = (odd: number[], o_head: number, o_tail: number, oks: number, eve
 /**
  * Recovery possible states from keystream from two's partial auth's
  * @param ks2 Keystream (32 -> 63)
- * @param in_ Input
+ * @param input Value that was fed into lfsr at time keystream was generated
  * @returns {Crypto1State[]}
  */
-export const lfsr_recovery32 = (ks2: number, in_: number): Crypto1State[] => {
+export const lfsr_recovery32 = (ks2: number, input: number): Crypto1State[] => {
     const statelist: Crypto1State[] = Array.from({ length: 1 << 18 }, () => new Crypto1State());
     let stl: number = 0;
     const odd: number[] = Array(1 << 21).fill(0);
@@ -132,8 +132,8 @@ export const lfsr_recovery32 = (ks2: number, in_: number): Crypto1State[] => {
         even_tail = extend_table_simple(even, even_tail, (eks >>>= 1) & 1);
     }
 
-    in_ = (in_ >>> 16 & 0xff) | (in_ << 16) | (in_ & 0xff00);
-    recover(odd, odd_head, odd_tail, oks, even, even_head, even_tail, eks, 11, statelist, 0, in_ << 1);
+    input = (input >>> 16 & 0xff) | (input << 16) | (input & 0xff00);
+    recover(odd, odd_head, odd_tail, oks, even, even_head, even_tail, eks, 11, statelist, 0, input << 1);
     return statelist;
 }
 

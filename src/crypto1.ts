@@ -21,14 +21,14 @@ export const prng_successor = (x: number, n: number): number => {
 /**
  * Generate keystream for words (uint32)
  * @param s State
- * @param in_ Input word
+ * @param input Input word
  * @param isEncrypted Is input word encrypted?
  * @returns {number}
  */
-export const crypto1_word = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const crypto1_word = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let i: number, ret: number = 0;
     for (i = 0; i < 32; ++i) {
-        ret |= crypto1_bit(s, bebit(in_, i), isEncrypted) << (i ^ 24);
+        ret |= crypto1_bit(s, bebit(input, i), isEncrypted) << (i ^ 24);
     }
     return ret;
 }
@@ -36,14 +36,14 @@ export const crypto1_word = (s: Crypto1State, in_: number, isEncrypted: boolean 
 /**
  * Generate keystream for bytes
  * @param s State
- * @param in_ Input byte
+ * @param input Input byte
  * @param isEncrypted Is input byte encrypted?
  * @returns {number}
  */
-export const crypto1_byte = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const crypto1_byte = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let i: number, ret: number = 0;
     for (i = 0; i < 8; ++i) {
-        ret |= crypto1_bit(s, bit(in_, i), isEncrypted) << i;
+        ret |= crypto1_bit(s, bit(input, i), isEncrypted) << i;
     }
     return ret;
 }
@@ -51,15 +51,15 @@ export const crypto1_byte = (s: Crypto1State, in_: number, isEncrypted: boolean 
 /**
  * Generate keystream for bits
  * @param s State
- * @param in_ Input bit
+ * @param input Input bit
  * @param isEncrypted Is input bit encrypted?
  * @returns {number}
  */
-export const crypto1_bit = (s: Crypto1State, in_: number, isEncrypted: boolean = false): number => {
+export const crypto1_bit = (s: Crypto1State, input: number, isEncrypted: boolean = false): number => {
     let feedin: number;
     let ret: number = filter(s.odd);
     feedin = ret & ((isEncrypted) ? 1 : 0);
-    feedin ^= ((in_ !== 0) ? 1 : 0);
+    feedin ^= ((input !== 0) ? 1 : 0);
     feedin ^= LF_POLY_ODD & s.odd;
     feedin ^= LF_POLY_EVEN & s.even;
     s.even = s.even << 1 | parity(feedin);

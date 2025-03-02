@@ -1,5 +1,5 @@
 /**
- * Get bit from number by index
+ * Get bit of `num` at position `index`
  * @param num Number
  * @param index Index
  * @returns {number}
@@ -9,7 +9,7 @@ export const bit = (num: number, index: number): number => {
 }
 
 /**
- * Get bit from Crypto-1 word (uint32) by index
+ * Get bit of reversed endian 32-bit `num` at position `index`
  * @param num Word
  * @param index Index
  * @returns {number}
@@ -19,6 +19,8 @@ export const bebit = (num: number, index: number): number => {
 }
 
 /**
+ * Filter function of Crypto1.
+ * 
  * Compute one bit of keystream from LFSR bits
  * @param x LFSR bits
  * @returns {number}
@@ -89,6 +91,11 @@ export const quicksort = (data: number[], start: number, stop: number): void => 
 
 /**
  * Helper, calculates the partial linear feedback contributions and puts in MSB
+ * @param data Input number
+ * @param item Input index
+ * @param mask1
+ * @param mask2
+ * @returns {void}
  */
 export const update_contribution = (data: number[], item: number, mask1: number, mask2: number): void => {
     let p: number = data[item] >>> 25;
@@ -98,45 +105,57 @@ export const update_contribution = (data: number[], item: number, mask1: number,
 }
 
 /**
- * Using a bit of the keystream extend the table of possible lfsr states
+ * Using a bit of the keystream extend the table of possible lfsr states (complex version)
+ * @param data Result table
+ * @param tbl Array of even/odd bits of lfsr
+ * @param size Size of array
+ * @param bit Bit of keystream
+ * @param m1 mask1
+ * @param m2 mask2
+ * @param input Value that was fed into lfsr at time keystream was generated
+ * @returns {number}
  */
-export const extend_table = (data: number[], tbl: number, end: number, bit: number, m1: number, m2: number, in_: number): number => {
-    in_ <<= 24;
-    for (data[tbl] <<= 1; tbl <= end; data[++tbl] <<= 1) {
+export const extend_table = (data: number[], tbl: number, size: number, bit: number, m1: number, m2: number, input: number): number => {
+    input <<= 24;
+    for (data[tbl] <<= 1; tbl <= size; data[++tbl] <<= 1) {
         if ((filter(data[tbl]) ^ filter(data[tbl] | 1)) !== 0) {
             data[tbl] |= filter(data[tbl]) ^ bit;
             update_contribution(data, tbl, m1, m2);
-            data[tbl] ^= in_;
+            data[tbl] ^= input;
         } else if (filter(data[tbl]) === bit) {
-            data[++end] = data[tbl + 1];
+            data[++size] = data[tbl + 1];
             data[tbl + 1] = data[tbl] | 1;
             update_contribution(data, tbl, m1, m2);
-            data[tbl++] ^= in_;
+            data[tbl++] ^= input;
             update_contribution(data, tbl, m1, m2);
-            data[tbl] ^= in_;
+            data[tbl] ^= input;
         } else {
-            data[tbl--] = data[end--];
+            data[tbl--] = data[size--];
         }
     }
-    return end;
+    return size;
 }
 
 /**
- * Using a bit of the keystream extend the table of possible lfsr states
+ * Using a bit of the keystream extend the table of possible lfsr states (simple version)
+ * @param tbl Array of even/odd bits of lfsr
+ * @param size Size of array 
+ * @param bit Bit of keystream
+ * @returns {number}
  */
-export const extend_table_simple = (tbl: number[], end: number, bit: number): number => {
+export const extend_table_simple = (tbl: number[], size: number, bit: number): number => {
     let i = 0;
-    for (tbl[i] <<= 1; i <= end; tbl[++i] <<= 1) {
+    for (tbl[i] <<= 1; i <= size; tbl[++i] <<= 1) {
         if ((filter(tbl[i]) ^ filter(tbl[i] | 1)) !== 0) {
             tbl[i] |= filter(tbl[i]) ^ bit;
         } else if (filter(tbl[i]) === bit) {
-            tbl[++end] = tbl[++i];
+            tbl[++size] = tbl[++i];
             tbl[i] = tbl[i - 1] | 1;
         } else {
-            tbl[i--] = tbl[end--];
+            tbl[i--] = tbl[size--];
         }
     }
-    return end;
+    return size;
 }
 
 export const oddByteParity: number[] = [
@@ -158,14 +177,29 @@ export const oddByteParity: number[] = [
     1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
 ]
 
+/**
+ * Return odd parity of unsigned 8-bit `x`
+ * @param x Number
+ * @returns {number}
+ */
 export const oddParity8 = (x: number): number => {
     return oddByteParity[x];
 }
 
+/**
+ * Return even parity of unsigned 8-bit `x`
+ * @param x Number
+ * @returns {number}
+ */
 export const evenParity8 = (x: number): number => {
     return oddParity8(x) ^ 1;
 }
 
+/**
+ * Return even parity of unsigned 32-bit `x`
+ * @param x Number
+ * @returns {number}
+ */
 export const evenParity32 = (x: number): number => {
     x ^= x >> 16;
     x ^= x >> 8;
