@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { Crypto1State, encrypt, lfsr_rollback_byte, recovery32, recovery64 } from "../src/"
 import { filter } from "../src/utils"
+import { recoveryNested } from "../src/crapto1"
 
 test("Recovery by 2 auths", () => {
     // Real card
@@ -44,6 +45,16 @@ test("Recovery by 1 auth", () => {
         0x15b9d553,
         0xa79a3fee
     )).toBe(0x62bea192fa37n)
+})
+
+test("Recovery by nested auth", () => {
+    expect(recoveryNested(
+        0x5c467f63,
+        0x4bbf8a12,
+        0xabb30bd1,
+        0x46033966,
+        0xadc18162
+    )).toBe(0x059e2905bfccn)
 })
 
 test("State", () => {

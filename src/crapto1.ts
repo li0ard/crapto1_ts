@@ -251,11 +251,11 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
  * Recovery by two sets of 32 bit keystream authentication
  * @param uid UID
  * @param chal Tag challenge #1 (aka `nt`)
- * @param rchal Reader challenge #1 (aka `nr_0`)
- * @param rresp Reader response #1 (aka `ar_0`)
+ * @param rchal Reader challenge #1 (aka `{nr_0}`)
+ * @param rresp Reader response #1 (aka `{ar_0}`)
  * @param chal2 Tag challenge #2 (aka `nt1`)
- * @param rchal2 Reader challenge #2 (aka `nr_1`)
- * @param rresp2 Reader response #2 (aka `ar_1`)
+ * @param rchal2 Reader challenge #2 (aka `{nr_1}`)
+ * @param rresp2 Reader response #2 (aka `{ar_1}`)
  * @returns {bigint}
  */
 export const recovery32 = (uid: number, chal: number, rchal: number, rresp: number, chal2: number, rchal2: number, rresp2: number): bigint => {
@@ -277,10 +277,10 @@ export const recovery32 = (uid: number, chal: number, rchal: number, rresp: numb
 /**
  * Recovery by one set of full 64 bit keystream authentication
  * @param uid UID
- * @param chal Tag challenge
- * @param rchal Reader challenge
- * @param rresp Reader response
- * @param tresp Tag response
+ * @param chal Tag challenge (aka `nt`)
+ * @param rchal Reader challenge (aka `{nr}`)
+ * @param rresp Reader response (aka `{ar}`)
+ * @param tresp Tag response (aka `{at}`)
  * @returns {bigint}
  */
 export const recovery64 = (uid: number, chal: number, rchal: number, rresp: number, tresp: number): bigint => {
@@ -293,4 +293,35 @@ export const recovery64 = (uid: number, chal: number, rchal: number, rresp: numb
     lfsr_rollback_word(s, uid^chal)
 
     return s.lfsr
+}
+
+/**
+ * Recovery by partial nested authentication
+ * 
+ * @author doegox
+ * @param uid UID
+ * @param chal Tag challenge (aka `nt`)
+ * @param enc_chal Encrypted tag challenge (aka `{nt}`)
+ * @param rchal Reader challenge (aka `{nr}`)
+ * @param rresp Reader response (aka `{ar}`)
+ * @returns {bigint}
+ */
+export const recoveryNested = (uid: number, chal: number, enc_chal: number, rchal: number, rresp: number): bigint => {
+    let ar = prng_successor(chal, 64);
+    let ks0 = enc_chal ^ chal;
+    let ks2 = rresp ^ ar;
+
+    let s = lfsr_recovery32(ks0, uid ^ chal);
+
+    for (let t = 0; (s[t].odd !== 0) || (s[t].even !== 0); t++) {
+        crypto1_word(s[t], rchal, true);
+        if(ks2 == crypto1_word(s[t], 0)) {
+            lfsr_rollback_word(s[t], 0);
+            lfsr_rollback_word(s[t], rchal, true);
+            lfsr_rollback_word(s[t], uid ^ chal);
+            return s[t].lfsr
+        }
+    }
+
+    return -1n;
 }

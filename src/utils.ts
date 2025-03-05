@@ -19,9 +19,7 @@ export const bebit = (num: number, index: number): number => {
 }
 
 /**
- * Filter function of Crypto1.
- * 
- * Compute one bit of keystream from LFSR bits
+ * Filter function of Crypto1. Compute one bit of keystream from LFSR bits
  * @param x LFSR bits
  * @returns {number}
  */
