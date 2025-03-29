@@ -25,6 +25,17 @@ test("Recovery by 2 auths", () => {
         0xd24dd966,
         0x03fc7386
     )).toBe(0xa0a1a2a3a4a5n)
+
+    // incorrect
+    expect(recovery32(
+        0x939be0d5,
+        0x4e70d691,
+        0xb3a576be,
+        0x02c1559b,
+        0xc6efb126,
+        0xd24dd966,
+        0x03fc7312
+    )).toBe(-1n)
 })
 
 test("Recovery by 1 auth", () => {
