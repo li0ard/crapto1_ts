@@ -1,6 +1,6 @@
 {
   "name": "@li0ard/crapto1_ts",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
@@ -31,5 +31,5 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["crapto1", "crypto1", "mifare", "rfid", "proxmark"]
+  "keywords": ["crapto1", "crypto1", "mifare", "rfid", "proxmark", "nested", "staticnested", "hardnested"]
 }
