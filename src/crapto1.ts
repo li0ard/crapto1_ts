@@ -1,7 +1,7 @@
 import { prng_successor } from "./crypto1";
 import { LF_POLY_EVEN, LF_POLY_ODD, crypto1_word } from "./crypto1";
 import { Crypto1State } from "./state";
-import { bebit, binsearch, bit, evenParity32, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
+import { bebit, binsearch, bit, evenParity32, evenParity8, extend_table, extend_table_simple, filter, parity, quicksort } from "./utils";
 
 /**
  * Rollback the shift register in order to get previous states (for bits)
@@ -324,4 +324,69 @@ export const recoveryNested = (uid: number, chal: number, enc_chal: number, rcha
     }
 
     return -1n;
+}
+
+const nestedRecoverState = (uid: number, atks: Array<{ ntp: number, ks1: number }>): bigint[] => {
+    const keyCnt = new Map<bigint, number>()
+    for (const { ntp, ks1 } of atks) {
+        const states = lfsr_recovery32(ks1, ntp ^ uid)
+        for (const state of states) {
+            lfsr_rollback_word(state, ntp ^ uid)
+            const key = state.lfsr
+            keyCnt.set(key, (keyCnt.get(key) ?? 0) + 1)
+        }
+    }
+
+    return Array.from(keyCnt.entries()).sort((a, b) => b[1] - a[1]).slice(0, 50).map(([key]) => key);
+}
+
+const nestedIsValidNonce = (nt1: number, nt2: number, ks1: number, par: number): boolean => {
+    if (evenParity8((nt1 >>> 24) & 0xFF) !== (bit(par, 0) ^ evenParity8((nt2 >>> 24) & 0xFF) ^ bit(ks1, 16))) return false
+    if (evenParity8((nt1 >>> 16) & 0xFF) !== (bit(par, 1) ^ evenParity8((nt2 >>> 16) & 0xFF) ^ bit(ks1, 8))) return false
+    if (evenParity8((nt1 >>> 8) & 0xFF) !== (bit(par, 2) ^ evenParity8((nt2 >>> 8) & 0xFF) ^ bit(ks1, 0))) return false
+    return true
+}
+
+/**
+ * Recover key from tags with static nonce
+ * @param uid UID
+ * @param keyType Key type (`0x60` - Key A; `0x61` - Key B)
+ * @param atks Nonce logs of authentication
+ * @returns {bigint[]} Candidates keys
+ */
+export const staticNestedAttack = (uid: number, keyType: 0x60 | 0x61, atks: Array<{ nt1: number, nt2: number }>): bigint[] => {
+    let dist = 0
+    if (atks[0].nt1 === 0x01200145) dist = 160;
+    else if (atks[0].nt1 === 0x009080A2) dist = keyType === 0x60 ? 160 : 161;
+    if (dist === 0) throw new Error('unknown static nonce');
+
+    return nestedRecoverState(uid, atks.map(i => {
+        const ntp = prng_successor(i.nt1, dist)
+        const ks1 = i.nt2 ^ ntp
+
+        dist += 160
+        return { ntp, ks1 }
+    }))
+}
+
+/**
+ * Recover key from ags with weak PRNG
+ * @param uid UID
+ * @param dist Nonce distance between two authentication
+ * @param atks Logs of nested attack
+ * @returns {bigint[]} Candidates keys
+ */
+export const nestedAttack = (uid: number, dist: number, atks: Array<{ nt1: number, nt2: number, par: number }>): bigint[] => {
+    const atks2: Array<{ ntp: number, ks1: number }> = []
+    for (let i = 0; i < atks.length; i++) {
+        const tmp = atks[i]
+        const [nt1, nt2, par] = [tmp.nt1, tmp.nt2, tmp.par]
+        let ntp = prng_successor(nt1, dist - 14)
+        for (let j = 0; j < 29; j++, ntp = prng_successor(ntp, 1)) {
+            const ks1 = (nt2 ^ ntp)
+            if (nestedIsValidNonce(ntp, nt2, ks1, par)) atks2.push({ ntp, ks1 })
+        }
+    }
+
+    return nestedRecoverState(uid, atks2)
 }
