@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
-import { Crypto1State, encrypt, lfsr_rollback_byte, recovery32, recovery64 } from "../src/"
+import { Crypto1State, encrypt, lfsr_rollback_byte, recovery32, recovery64, nestedAttack, recoveryNested, staticNestedAttack } from "../src/"
 import { filter } from "../src/utils"
-import { nestedAttack, recoveryNested, staticNestedAttack } from "../src/crapto1"
 
 test("Recovery by 2 auths", () => {
     // Real card
