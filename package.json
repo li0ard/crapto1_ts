@@ -17,7 +17,8 @@
   "license": "MIT",
   "scripts": {
     "build": "rm -rf dist/ && tsc --project tsconfig.build.json",
-    "docs": "typedoc --options .config/typedoc/config.cjs"
+    "docs": "typedoc --options .config/typedoc/config.cjs",
+    "test:nested": "INCLUDE_NESTED_ATTACKS_TESTS=1 bun test"
   },
   "devDependencies": {
     "@types/bun": "latest",

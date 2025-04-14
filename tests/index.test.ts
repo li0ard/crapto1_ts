@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Crypto1State, encrypt, lfsr_rollback_byte, recovery32, recovery64 } from "../src/"
 import { filter } from "../src/utils"
-import { recoveryNested } from "../src/crapto1"
+import { nestedAttack, recoveryNested, staticNestedAttack } from "../src/crapto1"
 
 test("Recovery by 2 auths", () => {
     // Real card
@@ -99,3 +99,22 @@ test("Encryption", () => {
     // Decrypt
     expect(encrypt(s, [48, 20, 167, 254])).toEqual([112, 147, 223, 153])
 })
+
+if (process.env.INCLUDE_NESTED_ATTACKS_TESTS != undefined) {
+    test("Static nested", () => {
+        const keys = staticNestedAttack(0xb908a16d, 0x60, [{ nt1: 0x01200145, nt2: 0x81901975 }, { nt1: 0x01200145, nt2: 0xcdd400f3 }])
+        expect(keys).toContain(0xffffffffffffn)
+    
+        const keys2 = staticNestedAttack(0x03bb67a0, 0x60, [{ nt1: 0x009080a2, nt2: 0x40d0d735 }, { nt1: 0x009080a2, nt2: 0x664a1da0 }])
+        expect(keys2).toContain(0xffffffffffffn)
+    })
+    
+    test("Classic nested", () => {
+        const keys = nestedAttack(0x877209e1, 0x00000080, [
+            { nt1: 0xb4a08a09, nt2: 0x8a15bbf2, par: 5 },
+            { nt1: 0x1613293d, nt2: 0x912e6760, par: 7 }
+        ])
+    
+        expect(keys).toContain(0xffffffffffffn)
+    })
+}
