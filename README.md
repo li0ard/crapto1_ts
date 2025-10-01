@@ -79,4 +79,3 @@ Some parts were based on or greatly inspired by these projects:
 - [crapto1](https://github.com/li0ard/crapto1) - Original version in C
 - [Crapto1Sharp](https://github.com/kgamecarter/Crapto1Sharp) - Version in C#
 - [mfkey32nested](https://github.com/RfidResearchGroup/proxmark3/blob/master/tools/mfc/card_reader/mfkey32nested.c) - Recovery by nested auth (by @doegox)
-- [chameleon-ultra.js](https://github.com/taichunmin/chameleon-ultra.js/) - Implementation of nested attacks on JS (by @taichunmin)
