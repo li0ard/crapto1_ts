@@ -1,6 +1,6 @@
 {
     "name": "@li0ard/crapto1-ts",
-    "version": "0.3.0",
+    "version": "0.3.2",
     "exports": "./src/index.ts",
     "publish": {
         "include": [

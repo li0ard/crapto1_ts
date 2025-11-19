@@ -1,14 +1,14 @@
-import { Crypto1State, prng_successor, LF_POLY_EVEN, LF_POLY_ODD, bebit, binsearch, evenParity32, extend_table, extend_table_simple, filter, parity, quicksort, C1, C2, S1, S2, T1, T2, fastfwd, bit } from "./index";
+import { Crypto1State, prng_successor, LF_POLY_EVEN, LF_POLY_ODD, bebit, binsearch, evenParity32, extend_table, extend_table_simple, filter, quicksort, C1, C2, S1, S2, T1, T2, fastfwd, bit } from "./index.js";
 
 /** Recursively narrow down the search space, 4 bits of keystream at a time */
 const recover = (odd: number[], o_head: number, o_tail: number, oks: number, even: number[], e_head: number, e_tail: number, eks: number, rem: number, sl: Crypto1State[], s: number, input: number): number => {
     let o: number, e: number;
     if (rem === -1) {
         for (e = e_head; e <= e_tail; ++e) {
-            even[e] = even[e] << 1 ^ parity(even[e] & LF_POLY_EVEN) ^ (((input & 4) !== 0) ? 1 : 0);
+            even[e] = even[e] << 1 ^ evenParity32(even[e] & LF_POLY_EVEN) ^ (((input & 4) !== 0) ? 1 : 0);
             for (o = o_head; o <= o_tail; ++o, ++s) {
                 sl[s].even = odd[o];
-                sl[s].odd = even[e] ^ parity(odd[o] & LF_POLY_ODD);
+                sl[s].odd = even[e] ^ evenParity32(odd[o] & LF_POLY_ODD);
                 sl[s + 1].odd = sl[s + 1].even = 0;
             }
         }
@@ -41,9 +41,9 @@ const recover = (odd: number[], o_head: number, o_tail: number, oks: number, eve
  * @param input Value that was fed into lfsr at time keystream was generated
  */
 export const lfsr_recovery32 = (ks2: number, input: number): Crypto1State[] => {
-    const statelist: Crypto1State[] = Array.from({ length: 262144 }, () => new Crypto1State());
-    const odd: number[] = Array(2097152).fill(0);
-    const even: number[] = Array(2097152).fill(0);
+    const statelist: Crypto1State[] = Array.from({ length: 0x40000 }, () => new Crypto1State());
+    const odd: number[] = Array(0x200000).fill(0);
+    const even: number[] = Array(0x200000).fill(0);
     let stl: number = 0;
     let odd_head: number = 0, odd_tail: number = -1, oks: number = 0;
     let even_head: number = 0, even_tail: number = -1, eks: number = 0;
@@ -53,7 +53,7 @@ export const lfsr_recovery32 = (ks2: number, input: number): Crypto1State[] => {
 
     statelist[stl].odd = statelist[stl].even = 0;
 
-    for (let i = 1048576; i >= 0; --i) {
+    for (let i = 0x100000; i >= 0; --i) {
         if (filter(i) === (oks & 1)) odd[++odd_tail] = i;
         if (filter(i) === (eks & 1)) even[++even_tail] = i;
     }
@@ -77,7 +77,7 @@ export const lfsr_recovery64 = (ks2: number, ks3: number): Crypto1State[] => {
     const oks: number[] = Array(32).fill(0);
     const eks: number[] = Array(32).fill(0);
     const hi: number[] = Array(32).fill(0);
-    const table: number[] = Array(65536).fill(0);
+    const table: number[] = Array(0x10000).fill(0);
     const statelist: Crypto1State[] = [];
     let win = 0, low = 0;
 
@@ -209,7 +209,7 @@ export const recoveryNested = (uid: number, chal: number, enc_chal: number, rcha
 
 const lfsr_prefix_ks = (ks: number[], isOdd: boolean): number[] => {
     const candidates: number[] = [];
-    for (let i = 0; i < 2097152; i++) {
+    for (let i = 0; i < 0x200000; i++) {
         let isCandidate = true;
         for (let j = 0; isCandidate && j < 8; j++) {
             const tmp = (i ^ fastfwd[isOdd ? (8 + j) : j]) >>> 0;
@@ -252,8 +252,8 @@ export const lfsr_common_prefix = (pfx: number, ar: number, ks: number[], par: n
     for (let odd of odds) {
         for (let even of evens) {
             for (let i = 0; i < 64; i++) {
-                odd += 2097152;
-                even += (i & 0x7) > 0 ? 2097152 : 4194304;
+                odd += 0x200000;
+                even += (i & 7) > 0 ? 0x200000 : 0x400000;
                 const tmp = check_pfx_parity(pfx, ar, par, odd, even, isZeroPar);
                 if(tmp !== null) states.push(tmp);
             }

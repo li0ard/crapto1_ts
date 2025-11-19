@@ -38,14 +38,14 @@ const p64b = prng_successor(chal2, 64);
 
 console.log(`LFSR successors of the tag challenge:
   nt': ${dec2hex(p64, 32)}
- nt'': ${dec2hex(p64b, 32)}\n`);
+ nt'': ${dec2hex(prng_successor(p64, 32), 32)}\n`);
 
-let ks2 = rresp ^ p64;
+const ks2 = rresp ^ p64;
 
 console.log(`Keystream used to generate {ar} and {at}:
   ks2: ${dec2hex(ks2, 32)}\n`);
 
-let s = lfsr_recovery32(rresp ^ p64, 0);
+const s = lfsr_recovery32(rresp ^ p64, 0);
 for (let t = 0; (s[t].odd !== 0) || (s[t].even !== 0); ++t) {
     s[t].rollback_word();
     s[t].rollback_word(rchal, true);
@@ -53,7 +53,7 @@ for (let t = 0; (s[t].odd !== 0) || (s[t].even !== 0); ++t) {
     const key = s[t].lfsr;
     s[t].word(uid ^ chal2);
     s[t].word(rchal2, true);
-    if (rresp2 === (s[t].word() ^ prng_successor(chal2, 64))) {
+    if (rresp2 === (s[t].word() ^ p64b)) {
         console.log(`Found Key: [${key.toString(16).padStart(12, "0")}]`);
         break;
     }

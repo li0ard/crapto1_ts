@@ -88,12 +88,12 @@ test("State", () => {
 test("Encryption", () => {
     let s = Crypto1State.fromKey(0x708076d3560en);
     // Encrypt
-    expect(s.crypt([112, 147, 223, 153])).toEqual([48, 20, 167, 254]);
+    expect(s.crypt([0x70, 0x93, 0xdf, 0x99])).toEqual([0x30, 0x14, 0xa7, 0xfe]);
 
     // Rollback state
     for(let i = 0; i < 4; i++) s.rollback_byte(0);
     expect(s.lfsr).toBe(0x708076d3560en);
 
     // Decrypt
-    expect(s.crypt([48, 20, 167, 254])).toEqual([112, 147, 223, 153]);
+    expect(s.crypt([0x30, 0x14, 0xa7, 0xfe])).toEqual([0x70, 0x93, 0xdf, 0x99]);
 });

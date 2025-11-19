@@ -1,15 +1,11 @@
-import { LF_POLY_EVEN, LF_POLY_ODD, bebit, bit, filter, parity } from "./index";
-import { bitBigInt } from "./utils";
+import { LF_POLY_EVEN, LF_POLY_ODD, bebit, bit, filter } from "./index.js";
+import { bitBigInt, evenParity32 } from "./utils.js";
 
 /** Crypto1 state */
 export class Crypto1State {
     constructor(public odd: number = 0, public even: number = 0) {}
     
-    /**
-     * Initialize state from key (aka LFSR value)
-     * @param key 
-     * @returns 
-     */
+    /** Initialize state from key (aka LFSR value) */
     static fromKey(key: bigint): Crypto1State {
         let odd = 0n;
         let even = 0n;
@@ -40,15 +36,10 @@ export class Crypto1State {
      * @param isEncrypted Is input bit encrypted?
      */
     bit(input: number = 0, isEncrypted: boolean = false): number {
-        let ret: number = this.peekCrypto1Bit;
-        let feedin = ret & ((isEncrypted) ? 1 : 0);
-        feedin ^= ((input !== 0) ? 1 : 0);
-        feedin ^= LF_POLY_ODD & this.odd;
-        feedin ^= LF_POLY_EVEN & this.even;
-        this.even = this.even << 1 | parity(feedin);
-        this.odd ^= this.even;
-        this.even ^= this.odd;
-        this.odd ^= this.even;
+        const ret: number = this.peekCrypto1Bit;
+        const feedin = (ret & (isEncrypted ? 1 : 0)) ^ ((input !== 0) ? 1 : 0) ^ (LF_POLY_ODD & this.odd) ^ (LF_POLY_EVEN & this.even);
+        [this.odd, this.even] = [((this.even << 1) | evenParity32(feedin)) >>> 0, this.odd];
+
         return ret;
     }
 
@@ -131,18 +122,11 @@ export class Crypto1State {
      * @param isEncrypted Is input bit encrypted?
      */
     rollback_bit(input: number = 0, isEncrypted: boolean = false): number {
-        let ret: number;
-        this.odd &= 0xffffff;
-        const t = this.odd;
-        this.odd = this.even;
-        this.even = t;
-        let out = this.even & 1;
-        out ^= LF_POLY_EVEN & (this.even >>= 1);
-        out ^= LF_POLY_ODD & this.odd;
-        out ^= (input !== 0) ? 1 : 0;
-        out ^= (ret = this.peekCrypto1Bit) & ((isEncrypted) ? 1 : 0);
-        this.even |= parity(out) << 23;
-        return ret;
+        [this.even, this.odd] = [(this.odd & 0xffffff), this.even];
+        const ret: number = this.peekCrypto1Bit;
+        const out = (this.even & 1) ^ (LF_POLY_EVEN & (this.even >>>= 1)) ^ (LF_POLY_ODD & this.odd) ^ (input !== 0 ? 1 : 0) ^(ret & (isEncrypted ? 1 : 0));
+        this.even |= evenParity32(out) << 23;
+        return ret
     }
 
     /**
@@ -208,5 +192,5 @@ export class Crypto1State {
     }
 }
 
-export * from "./crapto1";
-export * from "./utils";
+export * from "./crapto1.js";
+export * from "./utils.js";
